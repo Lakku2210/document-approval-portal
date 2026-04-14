@@ -12,14 +12,17 @@ app.use(express.static('public'));
 
 let db = {};
 
+// ✅ SENDGRID EMAIL SETUP
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: "smtp.sendgrid.net",
+  port: 587,
   auth: {
-    user: process.env.EMAIL,
-    pass: process.env.PASS
+    user: "apikey",
+    pass: process.env.SENDGRID_API_KEY
   }
 });
 
+// 📤 Upload Route
 app.post('/upload', upload.single('file'), (req, res) => {
   const id = Date.now();
 
@@ -32,9 +35,11 @@ app.post('/upload', upload.single('file'), (req, res) => {
   };
 
   sendMail(id);
-  res.send("File uploaded & sent for approval");
+
+  res.send("✅ File uploaded & sent for approval");
 });
 
+// 📧 Send Email Function
 function sendMail(id) {
   const doc = db[id];
   const email = doc.approvers[doc.step];
@@ -43,11 +48,15 @@ function sendMail(id) {
 
   transporter.sendMail({
     to: email,
-    subject: doc.subject,
-    html: `<a href="${link}">Open & Approve</a>`
+    from: "lakku2210@gmail.com", //
+    subject: `Approval Required: ${doc.subject}`,
+    html: `<h3>Document Approval</h3>
+           <p>${doc.subject}</p>
+           <a href="${link}">Click to Approve</a>`
   });
 }
 
+// ✅ Approval Route
 app.get('/approve/:id', async (req, res) => {
   const doc = db[req.params.id];
 
@@ -55,10 +64,13 @@ app.get('/approve/:id', async (req, res) => {
   const pdfDoc = await PDFDocument.load(pdfBytes);
   const page = pdfDoc.getPages()[0];
 
-  page.drawText(
-    `Approved by: ${doc.approvers[doc.step]} | ${new Date().toDateString()}`,
-    { x: 50, y: 50 - doc.history.length * 20, size: 10 }
-  );
+  const text = `Approved by: ${doc.approvers[doc.step]} | ${new Date().toDateString()}`;
+
+  page.drawText(text, {
+    x: 50,
+    y: 50 - (doc.history.length * 20),
+    size: 10
+  });
 
   const updated = await pdfDoc.save();
   fs.writeFileSync(doc.file, updated);
@@ -68,10 +80,13 @@ app.get('/approve/:id', async (req, res) => {
 
   if (doc.step < 3) {
     sendMail(req.params.id);
-    res.send("Approved & moved forward");
+    res.send("✅ Approved & sent to next approver");
   } else {
-    res.send("Final Approval Done");
+    res.send("🎉 Final Approval Done. PDF Ready.");
   }
 });
 
-app.listen(3000);
+// 🚀 Start Server
+app.listen(3000, () => {
+  console.log("Server running on port 3000");
+});
