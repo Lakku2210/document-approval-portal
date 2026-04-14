@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Document Approval Portal</title>
+</head>
+<body>
+
+<h2>📄 Document Approval Portal</h2>
+
+<form action="/upload" method="post" enctype="multipart/form-data">
+
+  <label>Subject:</label><br>
+  <input name="subject" required><br><br>
+
+  <label>Approver 1 Email:</label><br>
+  <input name="a1" required><br><br>
+
+  <label>Approver 2 Email:</label><br>
+  <input name="a2" required><br><br>
+
+  <label>Approver 3 Email:</label><br>
+  <input name="a3" required><br><br>
+
+  <label>Select PDF:</label><br>
+  <input type="file" name="file" required><br><br>
+
+  <button type="submit">Submit for Approval</button>
+
+</form>
+
+</body>
+</html>
